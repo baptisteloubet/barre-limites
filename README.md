@@ -9,7 +9,7 @@ Les pourcentages des limites ne sont disponibles qu'avec un abonnement Pro ou Ma
 Dans Claude Code :
 
 ```
-/plugin install barre-limites --marketplace <owner>/barre-limites
+/plugin install barre-limites --marketplace baptisteloubet/barre-limites
 ```
 
 Réponds `y` pour ajouter le marketplace, puis choisis la portée « user » pour l'avoir dans toutes tes sessions.
