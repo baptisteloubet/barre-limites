@@ -74,7 +74,7 @@ const texteBarres = (m: Mesure, maintenant: number): string => {
     lignes.push('')
     lignes.push(`${c.label === '5h' ? 'Limite 5 h' : 'Limite 7 j'}  ${barre(c.pct)}  ${Math.round(c.pct)}%`)
     const detail = [
-      c.delta === null ? null : `Δ ${signe(c.delta)} ${c.delta > 0 ? '(en avance sur le rythme)' : '(dans le rythme)'}`,
+      c.delta === null ? null : `Δ ${signe(c.delta)} ${Math.round(c.delta) > 0 ? '(en avance sur le rythme)' : '(dans le rythme)'}`,
       c.reste !== null && c.reste > 0 ? `reset dans ${duree(c.reste)}` : null,
     ].filter(Boolean)
     if (detail.length > 0) lignes.push(detail.join('   '))
@@ -169,7 +169,7 @@ export const register: Register = on => {
               {c.delta !== null ? (
                 <Text color={couleurDelta(c.delta)}>
                   {'Δ '}
-                  {signe(c.delta)} {c.delta > 0 ? '(en avance sur le rythme)' : '(dans le rythme)'}
+                  {signe(c.delta)} {Math.round(c.delta) > 0 ? '(en avance sur le rythme)' : '(dans le rythme)'}
                 </Text>
               ) : null}
               {c.reste !== null && c.reste > 0 ? <Text dimColor>{'   reset dans '}{duree(c.reste)}</Text> : null}
