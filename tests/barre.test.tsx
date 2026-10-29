@@ -19,6 +19,7 @@ test('le bandeau affiche les limites et le delta', async ($, on) => {
   }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('command.register', () => ({ value: { command: 'limites' } }))
+  on('tool.register', () => ({ value: undefined }))
   on('ui.open', () => ({ value: { isPlaced: true } }))
   on('session.measure', (_, e) => ({ changed: e.changed }))
 
@@ -55,6 +56,7 @@ test('le panneau Limites détaille chaque fenêtre', async ($, on) => {
   }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('command.register', () => ({ value: { command: 'limites' } }))
+  on('tool.register', () => ({ value: undefined }))
   on('ui.open', () => ({ value: { isPlaced: true } }))
 
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
@@ -71,4 +73,27 @@ test('le panneau Limites détaille chaque fenêtre', async ($, on) => {
   const detail = await ui.find({ type: 'Text', text: /dans le rythme/ })
   expect(detail?.text).toBe('Δ -8% (dans le rythme)   reset dans 2h30')
   await ui.unmount()
+})
+
+test("l'outil limites renvoie les barres en texte", async ($, on) => {
+  on('clock.now', () => ({ value: MAINTENANT }))
+  on('session.usage', () => ({
+    value: {
+      startedAt: MAINTENANT - 72 * 60000,
+      context: { window: 200000, percent: 24 },
+      rateLimits: [
+        { kind: 'five_hour', percentUsed: 42, resetsAt: new Date(MAINTENANT + 2.5 * 3600000).toISOString() },
+      ],
+    },
+  }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('command.register', () => ({ value: { command: 'limites' } }))
+  on('tool.register', () => ({ value: undefined }))
+  on('ui.open', () => ({ value: { isPlaced: false, reason: 'no-surface' } }))
+
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const r = await $.tool.call({ tool: 'mcp__barre-limites__limites', tool_use_id: 't1', input: {} })
+  expect(r.result).toBe(
+    'Session 1h12   ·   contexte 24%\n\nLimite 5 h  ████████░░░░░░░░░░░░  42%\nΔ -8% (dans le rythme)   reset dans 2h30',
+  )
 })

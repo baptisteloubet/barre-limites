@@ -62,6 +62,27 @@ const texteStatut = (m: Mesure, maintenant: number): string =>
     .map(c => `${c.label} ${Math.round(c.pct)}%${c.delta === null ? '' : ` Δ${signe(c.delta)}`}`)
     .join(' · ') || `session ${duree(maintenant - m.startedAt)}`
 
+// Version texte des barres, pour l'outil que Claude appelle dans les conversations
+// de l'app, où aucun panneau ne peut être placé.
+const texteBarres = (m: Mesure, maintenant: number): string => {
+  const lignes = [`Session ${duree(maintenant - m.startedAt)}${m.contextPercent !== undefined ? `   ·   contexte ${m.contextPercent}%` : ''}`]
+  const calculs = calculer(m, maintenant)
+
+  if (calculs.length === 0) lignes.push('Limites : pas encore de mesure (disponibles après la prochaine réponse, abonnement Pro ou Max).')
+
+  for (const c of calculs) {
+    lignes.push('')
+    lignes.push(`${c.label === '5h' ? 'Limite 5 h' : 'Limite 7 j'}  ${barre(c.pct)}  ${Math.round(c.pct)}%`)
+    const detail = [
+      c.delta === null ? null : `Δ ${signe(c.delta)} ${c.delta > 0 ? '(en avance sur le rythme)' : '(dans le rythme)'}`,
+      c.reste !== null && c.reste > 0 ? `reset dans ${duree(c.reste)}` : null,
+    ].filter(Boolean)
+    if (detail.length > 0) lignes.push(detail.join('   '))
+  }
+
+  return lignes.join('\n')
+}
+
 const lireUsage = async ($: EngineInterface): Promise<Mesure> => {
   const u = await $.session.usage()
 
@@ -76,6 +97,12 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const r = await next(e)
     await $.command.register({ name: 'limites', description: 'Ouvre le panneau des limites (5 h, 7 jours, avance/retard)' })
+    await $.tool.register({
+      name: 'limites',
+      description:
+        "Donne les limites d'usage Claude de la personne : durée de session, contexte, limite 5 h et limite 7 jours en barres, avance ou retard sur le rythme, temps avant reset. À appeler quand elle tape /limites ou demande où en sont ses limites ; recopier le texte renvoyé tel quel dans un bloc de code.",
+      isDeferred: false,
+    })
     const m = await lireUsage($)
     await update($, mesure, () => m)
     $.ui.status(texteStatut(m, await $.clock.now()))
@@ -88,6 +115,12 @@ export const register: Register = on => {
     await $.ui.open({ id: PANNEAU, title: 'Limites' })
 
     return { text: 'Panneau des limites ouvert.' }
+  })
+
+  on('tool.call', { tool: 'mcp__barre-limites__limites' }, async $ => {
+    const m = (await read($, mesure)) ?? (await lireUsage($))
+
+    return { result: texteBarres(m, await $.clock.now()), isReadOnly: true }
   })
 
   on('session.measure', async ($, e, next) => {
