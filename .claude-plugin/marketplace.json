@@ -1,0 +1,5 @@
+{
+  "name": "barre-limites",
+  "owner": { "name": "Baptiste Loubet" },
+  "plugins": [{ "name": "barre-limites", "source": "./" }]
+}

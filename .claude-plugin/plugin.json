@@ -1,0 +1,10 @@
+{
+  "name": "barre-limites",
+  "version": "0.1.0",
+  "description": "Bandeau session, limite 5 h, limite 7 jours et avance/retard sur le rythme",
+  "types": "./types/index.d.ts",
+  "author": {
+    "name": "Baptiste Loubet"
+  },
+  "license": "MIT"
+}
