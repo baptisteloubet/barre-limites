@@ -67,6 +67,8 @@ test('le panneau Limites détaille chaque fenêtre', async ($, on) => {
     props: { title: 'Limites', isFocused: false, bodyColumns: 60, placement: 'dock', scroll: { offset: 0, bodyRows: 20 }, view: {} },
   })
   const ligne = await ui.find({ type: 'Text', text: /Limite 5 h/ })
-  expect(ligne?.text).toBe('Limite 5 h  42%   Δ -8% (dans le rythme)   reset dans 2h30')
+  expect(ligne?.text).toBe('Limite 5 h  ████████░░░░░░░░░░░░  42%')
+  const detail = await ui.find({ type: 'Text', text: /dans le rythme/ })
+  expect(detail?.text).toBe('Δ -8% (dans le rythme)   reset dans 2h30')
   await ui.unmount()
 })

@@ -28,7 +28,15 @@ const duree = (ms: number): string => {
   return `${m}min`
 }
 
-const couleurUsage = (p: number) => (p >= 90 ? 'error' : p >= 70 ? 'warning' : 'success')
+// Barre texte : █ consommé, ░ restant. Lisible sur tous les écrans (terminal, app, mobile).
+const LARGEUR_BARRE = 20
+const barre = (pct: number): string => {
+  const plein = Math.round((Math.min(100, Math.max(0, pct)) / 100) * LARGEUR_BARRE)
+
+  return '█'.repeat(plein) + '░'.repeat(LARGEUR_BARRE - plein)
+}
+
+const couleurUsage =(p: number) => (p >= 90 ? 'error' : p >= 70 ? 'warning' : 'success')
 const couleurDelta = (d: number) => (d > 10 ? 'error' : d > 0 ? 'warning' : 'success')
 
 type Calcul = { label: string; pct: number; delta: number | null; reste: number | null }
@@ -118,17 +126,22 @@ export const register: Register = on => {
           <Text dimColor>Limites : affichées après la prochaine réponse de Claude.</Text>
         ) : null}
         {calculs.map(c => (
-          <Text>
-            <Text weight="semibold">{c.label === '5h' ? 'Limite 5 h  ' : 'Limite 7 j  '}</Text>
-            <Text color={couleurUsage(c.pct)} weight="semibold">{Math.round(c.pct)}%</Text>
-            {c.delta !== null ? (
-              <Text color={couleurDelta(c.delta)}>
-                {'   Δ '}
-                {signe(c.delta)} {c.delta > 0 ? '(en avance sur le rythme)' : '(dans le rythme)'}
-              </Text>
-            ) : null}
-            {c.reste !== null && c.reste > 0 ? <Text dimColor>{'   reset dans '}{duree(c.reste)}</Text> : null}
-          </Text>
+          <Box flexDirection="column" marginTop={1}>
+            <Text>
+              <Text weight="semibold">{c.label === '5h' ? 'Limite 5 h  ' : 'Limite 7 j  '}</Text>
+              <Text color={couleurUsage(c.pct)}>{barre(c.pct)}</Text>
+              <Text color={couleurUsage(c.pct)} weight="semibold">{'  '}{Math.round(c.pct)}%</Text>
+            </Text>
+            <Text>
+              {c.delta !== null ? (
+                <Text color={couleurDelta(c.delta)}>
+                  {'Δ '}
+                  {signe(c.delta)} {c.delta > 0 ? '(en avance sur le rythme)' : '(dans le rythme)'}
+                </Text>
+              ) : null}
+              {c.reste !== null && c.reste > 0 ? <Text dimColor>{'   reset dans '}{duree(c.reste)}</Text> : null}
+            </Text>
+          </Box>
         ))}
       </Box>
     )
